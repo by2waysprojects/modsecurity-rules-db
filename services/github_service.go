@@ -71,9 +71,14 @@ func (s *GithubRulesService) downloadAndExtractRules(fileName string) (map[strin
 
 		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "SecRule") || strings.HasPrefix(line, "SecAction") || strings.HasPrefix(line, "SecMarker") {
+			fmt.Printf("SecRule %s\n", line)
+
 			matches := msgRegex.FindStringSubmatch(line)
 			if len(matches) > 1 {
 				msg := matches[1]
+
+				fmt.Printf("msg %s\n", msg)
+
 				rules[msg] = line
 			}
 		}
