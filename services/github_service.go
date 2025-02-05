@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-const baseURL = "https://raw.githubusercontent.com/coreruleset/coreruleset/v4.3/dev/rules/"
+const baseURL = "https://raw.githubusercontent.com/coreruleset/coreruleset/refs/heads/main/rules/"
 
 var msgRegex = regexp.MustCompile(`msg\s*:\s*"([^"]+)"`)
 
