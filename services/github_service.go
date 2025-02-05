@@ -12,7 +12,7 @@ import (
 
 const baseURL = "https://raw.githubusercontent.com/coreruleset/coreruleset/refs/heads/main/rules/"
 
-var msgRegex = regexp.MustCompile(`msg\s*:\s*"([^"]+)"`)
+var msgRegex = regexp.MustCompile(`msg:'([^']+)'`)
 
 var ruleFiles = []string{
 	"REQUEST-901-INITIALIZATION.conf",
@@ -58,9 +58,10 @@ func (s *GithubRulesService) downloadAndExtractRules(fileName string) (map[strin
 		return nil, fmt.Errorf("error HTTP %d downloading %s", resp.StatusCode, fileName)
 	}
 
-	var rules map[string]string
+	rules := make(map[string]string)
 	reader := bufio.NewReader(resp.Body)
 	var ruleBuilder strings.Builder
+
 	for {
 		line, err := reader.ReadString('\n')
 		if err == io.EOF {
@@ -71,8 +72,7 @@ func (s *GithubRulesService) downloadAndExtractRules(fileName string) (map[strin
 		}
 
 		line = strings.TrimSpace(line)
-		if strings.HasPrefix(line, "SecRule") || strings.HasPrefix(line, "SecAction") || strings.HasPrefix(line, "SecMarker") {
-			fmt.Printf("SecRule %s\n", line)
+		if strings.HasPrefix(line, "SecRule") || strings.HasPrefix(line, "SecAction") || strings.HasPrefix(line, "SecMarker") || ruleBuilder.Len() != 0 {
 
 			if strings.HasSuffix(strings.TrimRight(line, " "), "\\") {
 				ruleBuilder.WriteString(strings.TrimSuffix(strings.TrimRight(line, " "), "\\"))
@@ -97,6 +97,8 @@ func (s *GithubRulesService) FetchAllModsecurityRules(limit int) (map[string]str
 	processed := 0
 
 	for _, ruleFile := range ruleFiles {
+		fmt.Printf("Fetching rules for %s...\n", ruleFile)
+
 		rules, err := s.downloadAndExtractRules(ruleFile)
 		if err != nil {
 			fmt.Printf("Error fetching rules for %s: %v\n", ruleFile, err)
