@@ -60,6 +60,7 @@ func (s *GithubRulesService) downloadAndExtractRules(fileName string) (map[strin
 
 	var rules map[string]string
 	reader := bufio.NewReader(resp.Body)
+	var ruleBuilder strings.Builder
 	for {
 		line, err := reader.ReadString('\n')
 		if err == io.EOF {
@@ -73,13 +74,17 @@ func (s *GithubRulesService) downloadAndExtractRules(fileName string) (map[strin
 		if strings.HasPrefix(line, "SecRule") || strings.HasPrefix(line, "SecAction") || strings.HasPrefix(line, "SecMarker") {
 			fmt.Printf("SecRule %s\n", line)
 
-			matches := msgRegex.FindStringSubmatch(line)
-			if len(matches) > 1 {
-				msg := matches[1]
-
-				fmt.Printf("msg %s\n", msg)
-
-				rules[msg] = line
+			if strings.HasSuffix(line, "\\") {
+				ruleBuilder.WriteString(strings.TrimSuffix(line, "\\"))
+				continue
+			} else {
+				ruleBuilder.WriteString(line)
+				matches := msgRegex.FindStringSubmatch(ruleBuilder.String())
+				if len(matches) > 1 {
+					msg := matches[1]
+					rules[msg] = ruleBuilder.String()
+				}
+				ruleBuilder.Reset()
 			}
 		}
 	}
