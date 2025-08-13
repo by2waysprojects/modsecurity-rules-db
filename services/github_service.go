@@ -77,8 +77,15 @@ func (s *GithubRulesService) downloadAndExtractRules(fileName string) (map[strin
 		if strings.HasPrefix(line, "SecRule") || strings.HasPrefix(line, "SecAction") || strings.HasPrefix(line, "SecMarker") || ruleBuilder.Len() != 0 || chaining {
 
 			if strings.HasSuffix(strings.TrimRight(line, " "), "\\") {
+				if ruleBuilder.Len() > 0 {
+					ruleBuilder.WriteString(" ")
+				}
 				ruleBuilder.WriteString(strings.TrimSuffix(strings.TrimRight(line, " "), "\\"))
 				continue
+			}
+
+			if ruleBuilder.Len() > 0 {
+				ruleBuilder.WriteString(" ")
 			}
 
 			ruleBuilder.WriteString(line)
