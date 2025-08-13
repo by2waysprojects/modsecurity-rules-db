@@ -61,6 +61,7 @@ func (s *GithubRulesService) downloadAndExtractRules(fileName string) (map[strin
 	rules := make(map[string]string)
 	reader := bufio.NewReader(resp.Body)
 	var ruleBuilder strings.Builder
+	var chaining bool
 
 	for {
 		line, err := reader.ReadString('\n')
@@ -72,20 +73,29 @@ func (s *GithubRulesService) downloadAndExtractRules(fileName string) (map[strin
 		}
 
 		line = strings.TrimSpace(line)
-		if strings.HasPrefix(line, "SecRule") || strings.HasPrefix(line, "SecAction") || strings.HasPrefix(line, "SecMarker") || ruleBuilder.Len() != 0 {
+
+		if strings.HasPrefix(line, "SecRule") || strings.HasPrefix(line, "SecAction") || strings.HasPrefix(line, "SecMarker") || ruleBuilder.Len() != 0 || chaining {
 
 			if strings.HasSuffix(strings.TrimRight(line, " "), "\\") {
 				ruleBuilder.WriteString(strings.TrimSuffix(strings.TrimRight(line, " "), "\\"))
 				continue
-			} else {
-				ruleBuilder.WriteString(line)
-				matches := msgRegex.FindStringSubmatch(ruleBuilder.String())
-				if len(matches) > 1 {
-					msg := matches[1]
-					rules[msg] = ruleBuilder.String()
-				}
-				ruleBuilder.Reset()
 			}
+
+			ruleBuilder.WriteString(line)
+
+			if strings.Contains(line, "chain\"") {
+				chaining = true
+				continue
+			}
+
+			matches := msgRegex.FindStringSubmatch(ruleBuilder.String())
+			if len(matches) > 1 {
+				msg := matches[1]
+				rules[msg] = ruleBuilder.String()
+			}
+			ruleBuilder.Reset()
+			chaining = false
+
 		}
 	}
 
