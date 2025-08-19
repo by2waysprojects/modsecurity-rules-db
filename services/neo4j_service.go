@@ -56,7 +56,7 @@ func (s *Neo4jService) SaveModsecurityRules(modsecurityRules map[string]string) 
 	defer session.Close(ctx)
 
 	for name, rule := range modsecurityRules {
-		modsecurityRule := services.ModSecurityRuleNeo4j{ID: name, Rule: rule, Action: services.Alert}
+		modsecurityRule := services.ModSecurityRuleNeo4j{ID: name, Rule: rule, Action: services.BlockAndAlert}
 		query := `
 			CREATE (i:ModSecRule {
 				id: $id,
